@@ -25,10 +25,10 @@ function operate(num1, op, num2) {
     else if (op === '-') {
         return subtract(num1, num2);
     }
-    else if (op === 'X') {
+    else if (op === 'X' || op === '*') {
         return multiply(num1, num2);
     }
-    else if (op === '/') {
+    else if (op === '/' || op === '%') {
         return divide(num1, num2);
     }
 }
@@ -51,36 +51,36 @@ function error() {
     disable = true
     display.innerText = "ERROR"
 }
-document.querySelectorAll('.number').forEach(num => {
-    num.addEventListener("click", () => {
-        if (!wait && !disable) {
-            first += num.textContent
-            if (first.length > 10) {
-                error()
-                return;
-            }
-            display.innerText = first
-        } else if (!disable && wait) {
-            second += num.textContent
-            if (second.length > 10) {
-                error()
-                return;
-            }
-            display.innerText = second
+function handlenumber(num) {
+    if (!wait && !disable) {
+        first += num
+        if (first.length > 10) {
+            error()
+            return;
         }
-    });
-});
-document.querySelectorAll('.operator').forEach(op => {
-    op.addEventListener("click", () => {
-        if (!opwait && !disable) {
-            operator = op.textContent
-            display.innerText = op.textContent
-            opwait = true;
-            wait = true;
+        display.innerText = first
+    } else if (!disable && wait) {
+        second += num
+        if (second.length > 10) {
+            error()
+            return;
         }
-    });
-});
-document.querySelector('.equal').addEventListener("click", () => {
+        display.innerText = second
+    }
+}
+function handleoperator(op) {
+
+    if (!opwait && !disable) {
+        operator = op
+        display.innerText = op
+        opwait = true;
+        wait = true;
+    }
+}
+function handleequal() {
+    if (!wait || second.length == 0) {
+        return;
+    }
     let ans = operate(parseFloat(first), operator, parseFloat(second))
     updatedisplay(ans)
 
@@ -88,39 +88,70 @@ document.querySelector('.equal').addEventListener("click", () => {
     second = ""
     wait = false
     opwait = false;
-});
-document.querySelector('.clear').addEventListener("click", () => {
+}
+function handleclear() {
     first = ""
     second = ""
     wait = false
     opwait = false
     display.innerText = "0"
     disable = false
-});
-document.querySelector('.backspace').addEventListener("click", () => {
+}
+function handlebackspace() {
     if (!wait && !disable) {
         first = first.slice(0, first.length - 1)
         updatedisplay(first)
     } else if (wait && !disable) {
         second = second.slice(0, second.length - 1)
         updatedisplay(second)
-
     }
-});
-document.querySelector('.decimal').addEventListener("click", () => {
+}
+function handledecimal() {
     if (!wait && !disable) {
-        first += '.'
-        if (first.length > 10) {
-            error()
-            return;
+        if (!first.includes(".")) {
+            first += ".";
+            display.innerText = first;
         }
-        display.innerText = first
     } else if (!disable && wait) {
-        second += '.'
-        if (second.length > 10) {
-            error()
-            return;
+        if (!second.includes(".")) {
+            second += ".";
+            display.innerText = second;
         }
-        display.innerText = second
     }
+}
+document.querySelectorAll('.number').forEach(num => {
+    num.addEventListener("click", () => handlenumber(num.textContent));
 });
+document.querySelectorAll('.operator').forEach(op => {
+    op.addEventListener("click", () => handleoperator(op.textContent));
+});
+document.querySelector('.equal').addEventListener("click", () => handleequal());
+document.querySelector('.clear').addEventListener("click", () => handleclear());
+document.querySelector('.backspace').addEventListener("click", () => handlebackspace());
+document.querySelector('.decimal').addEventListener("click", () => {
+    handledecimal();
+});
+
+document.addEventListener("keydown", (e) => {
+    let key = e.key
+    console.log(key)
+    if (key === "Shift") return;
+    if (key >= "0" && key <= "9") {
+        handlenumber(key);
+    }
+    if (key === "Enter" || key === "=") {
+        handleequal()
+    }
+    if (key === "Escape") {
+        handleclear()
+    }
+    if (key === "Backspace") {
+        handlebackspace()
+    }
+    if (['+', '%', '-', '*'].includes(key)) {
+        handleoperator(key)
+    }
+    if (key === '.') {
+        handledecimal()
+    }
+})
